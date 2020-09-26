@@ -227,6 +227,8 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
                 f.write(r.content)
             
             with ZipFile('chromedriver_win32.zip', mode='r') as z:
+                if 'chromedriver.exe' in driverPath:
+                    driverPath = os.path.dirname(driverPath )
                 z.extractall(driverPath)
             
             if delZip:

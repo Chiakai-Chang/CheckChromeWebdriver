@@ -39,8 +39,8 @@ def checkDriverOutdate(chromedriverPath):
                     supectFolder.append(f)
             
             googleTarget = ''
-            find = 0
-    
+            chromeVer = ''
+            chromeVers = dict()
             for f in supectFolder:
                 path = os.path.join('c:\\',f)
                 for ff in os.listdir(path):
@@ -51,9 +51,18 @@ def checkDriverOutdate(chromedriverPath):
                                 chromeFolder = os.path.join(googleTarget, 'Chrome', 'Application')
                                 for ffff in os.listdir(chromeFolder):
                                     if '.' in ffff:
-                                        find = 1
-                                        break
-            if find == 1:
+                                        try:
+                                            tempSplit = ffff.split('.')
+                                            tempFloat = f'{tempSplit[0]}.{"".join(tempSplit[1:])}'
+                                            tempFloat = float(tempFloat)
+                                        except :
+                                            pass
+                                        else:
+                                            chromeVers[tempFloat] = ffff
+            newest = max(chromeVers.keys())
+            chromeVer = chromeVers[newest]            
+
+            if chromeVer != '':
                 print(f'>>出錯！{x}')
             else:
                 print('>>出錯，發現您電腦沒有安裝Chrome(Google瀏覽器)，要安裝以後，使用對應版本號的chromedriver才能發揮作用喔！')
@@ -103,8 +112,7 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True, verify=True, ti
     
     googleTarget = ''
     chromeVer = ''
-    find = 0
-    
+    chromeVers = dict()
     for f in supectFolder:
         path = os.path.join('c:\\',f)
         for ff in os.listdir(path):
@@ -115,10 +123,16 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True, verify=True, ti
                         chromeFolder = os.path.join(googleTarget, 'Chrome', 'Application')
                         for ffff in os.listdir(chromeFolder):
                             if '.' in ffff:
-                                chromeVer = ffff
-                                find = 1
-                                break
-                            
+                                try:
+                                    tempSplit = ffff.split('.')
+                                    tempFloat = f'{tempSplit[0]}.{"".join(tempSplit[1:])}'
+                                    tempFloat = float(tempFloat)
+                                except :
+                                    pass
+                                else:
+                                    chromeVers[tempFloat] = ffff
+    newest = max(chromeVers.keys())
+    chromeVer = chromeVers[newest]            
     print(f'>>您電腦當前Chrome瀏覽器的版本號為：{chromeVer}')
     
     #確認是否已有Chromedriver存在
@@ -131,7 +145,7 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True, verify=True, ti
             return True
         
     #沒有Chromedriver存在，或者Chromedriver已過期就重新下載、更新
-    if find == 1:
+    if chromeVer != '':
         print('>>嘗試下載/更新您電腦的Chromedriver...')
         #print(f'>>找到您目前使用的Chrome版本號為：{chromeVer}')
         try:

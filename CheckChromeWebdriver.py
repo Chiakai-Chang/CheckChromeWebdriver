@@ -64,7 +64,7 @@ def checkDriverOutdate(chromedriverPath):
     return False
 
 
-def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
+def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True, verify=True, timeout=180):
     '''
     自動分析電腦內chrome版本，然後下載對應版本之chromedriver到指定之位置
     Parameters
@@ -143,11 +143,13 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
         myVerList = chromeVer.split('.')
         #下載符合版本號之driver
         s = HTMLSession()
+        s.verify = verify
         
         #先抓版本號最近的
+        print('>>找尋符合您電腦最新版的Chromedriver...')
         url = 'https://chromedriver.chromium.org/downloads'
         
-        r =s.get(url, verify=False)
+        r = s.get(url, timeout=timeout)
         
         links = r.html.links
         
@@ -178,7 +180,7 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
                 print(f'找到driver下載連結如下：\n{url_driver}')
                 print('>>開始嘗試下載chromedriver', end='')
                 try:
-                    r = s.get(url_driver, verify=False, timeout=180)
+                    r = s.get(url_driver, timeout=timeout)
                     break
                 except:
                     print(f'，下載失敗，重新嘗試(第{count}次/最多嘗試{MaxRetry}次)')
@@ -195,10 +197,10 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
                     count = 0
                     while retry > 0:
                         count += 1
-                        print(f'找到driver下載連結如下：\n{url_driver}')
-                        print('>>開始嘗試下載chromedriver', end='')
+                        #print(f'找到driver下載連結如下：\n{url_driver}')
+                        print('>>開始下載chromedriver', end='')
                         try:
-                            r = s.get(url_driver, verify=False, timeout=180)
+                            r = s.get(url_driver, timeout=timeout)
                             break
                         except:
                             print(f'，下載失敗，重新嘗試(第{count}次/最多嘗試{MaxRetry}次)')
@@ -215,10 +217,10 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
                 count = 0
                 while retry > 0:
                     count += 1
-                    print(f'找到driver下載連結如下：\n{url_driver}')
-                    print('>>開始嘗試下載chromedriver', end='')
+                    #print(f'找到driver下載連結如下：\n{url_driver}')
+                    print('>>開始下載chromedriver', end='')
                     try:
-                        r = s.get(url_driver, verify=False, timeout=180)
+                        r = s.get(url_driver, timeout=timeout)
                         break
                     except:
                         print(f'，下載失敗，重新嘗試(第{count}次/最多嘗試{MaxRetry}次)')

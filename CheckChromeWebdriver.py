@@ -132,7 +132,14 @@ def updateWebdriver(driverPath='data', MaxRetry=10, delZip=True):
         
     #沒有Chromedriver存在，或者Chromedriver已過期就重新下載、更新
     if find == 1:
-        print(f'>>找到您目前使用的Chrome版本號為：{chromeVer}')
+        print('>>嘗試下載/更新您電腦的Chromedriver...')
+        #print(f'>>找到您目前使用的Chrome版本號為：{chromeVer}')
+        try:
+            #嘗試刪除舊的Chromedriver
+            os.remove(driverPath)
+        except :
+            pass
+        
         myVerList = chromeVer.split('.')
         #下載符合版本號之driver
         s = HTMLSession()

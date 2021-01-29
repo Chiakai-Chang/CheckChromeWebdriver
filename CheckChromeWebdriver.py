@@ -34,7 +34,10 @@ def checkDriverOutdate(chromedriverPath : str) -> bool:
     except:
         x = traceback.format_exc()
         if 'This version of ChromeDriver only supports' in f'{x}':
-            print('>>您的chromedriver版本過時囉！')
+            print('>>您的ChromeDriver版本過時囉！')
+            return True
+        elif 'OSError' in f'{x}':
+            print('>>您的ChromeDriver不是有效的 Win32 應用程式！')
             return True
         else:
             supectFolder = []
@@ -61,7 +64,7 @@ def checkDriverOutdate(chromedriverPath : str) -> bool:
                 print(f'>>出錯！{x}')
             else:
                 print('>>出錯，發現您電腦沒有安裝Chrome(Google瀏覽器)，要安裝以後，使用對應版本號的chromedriver才能發揮作用喔！')
-                print('>>chrome下載網址：「https://www.google.com/intl/zh-TW/chrome/」')
+                print('>>Chrome下載網址：「https://www.google.com/intl/zh-TW/chrome/」')
                 _ = webbrowser.open('https://www.google.com/intl/zh-TW/chrome/')
     return False
 
@@ -72,10 +75,11 @@ def updateWebdriver(
         MaxRetry : int = 10, 
         delZip : bool = True,
         verify: bool = False,
+        retry : int = 3,
         timeout : int = 60,
         ) -> bool:
     '''
-    自動分析電腦內chrome版本，然後下載對應版本之chromedriver到指定之位置
+    自動分析電腦內Chrome版本，然後下載對應版本之ChromeDriver到指定之位置
     Parameters
     ----------
     driverPath : str
@@ -88,6 +92,8 @@ def updateWebdriver(
         下載完成後，是否要刪除壓縮檔。預設是True。
     verify : bool, optional
         是否要SSL認證連線。預設是False(比較通用)。
+    retry : int, optional
+        連線重試次數。預設是3次。
     timeout : int, optional
         連線超時秒數。預設是60秒。
     Returns
@@ -103,7 +109,7 @@ def updateWebdriver(
         pass
 
     #搜尋chrome版本號
-    print('>>搜尋本機目前chrome版本號')
+    print('>>搜尋本機目前Chrome版本號')
     supectFolder = []
     for f in os.listdir(chromeDisk):
         if 'rogram' in f:
@@ -135,8 +141,14 @@ def updateWebdriver(
     if os.path.exists(driverPath): #若有就是看看是否過期
         outdate = checkDriverOutdate(driverPath)
         if outdate == 0:
-            print('>>目前本機已有最新可用的Chromedriver！')
+            print('>>目前本機已有最新可用的ChromeDriver！')
             return True
+        else:
+            #若過期就嘗試刪除舊檔
+            try:
+                os.remove(driverPath)
+            except :
+                pass
         
     #沒有Chromedriver存在，或者Chromedriver已過期就重新下載、更新
     if find == 1:
@@ -149,33 +161,45 @@ def updateWebdriver(
         #先抓版本號最近的
         url = 'https://chromedriver.chromium.org/downloads'
         
-        r =s.get(url, timeout=timeout)
-        
-        links = r.html.links
-        
-        matchList = []
-        closeList = []
-        
-        for link in links:
-            if '?path=' in link:
-                count = 0
-                for string in myVerList:
-                    if string in link:
-                        count += 1
-                if count == 4:
-                    #生成確實的下載網址再append
-                    link_fix = str(link).replace('index.html?path=','') + 'chromedriver_win32.zip'
-                    matchList.append(link_fix)
-                elif count > 2:
-                    #生成確實的下載網址再append
-                    link_fix = str(link).replace('index.html?path=','') + 'chromedriver_win32.zip'
-                    closeList.append(link_fix)
+        tempRetry = retry + 0
+        while tempRetry > 0:
+            try:
+                r = s.get(url, timeout=timeout)
+                
+                links = r.html.links
+                
+                matchList = []
+                closeList = []
+                
+                for link in links:
+                    if '?path=' in link:
+                        count = 0
+                        for string in myVerList:
+                            if string in link:
+                                count += 1
+                        if count == 4:
+                            #生成確實的下載網址再append
+                            link_fix = str(link).replace('index.html?path=','') + 'chromedriver_win32.zip'
+                            matchList.append(link_fix)
+                        elif count > 2:
+                            #生成確實的下載網址再append
+                            link_fix = str(link).replace('index.html?path=','') + 'chromedriver_win32.zip'
+                            closeList.append(link_fix)
+            except :
+                tempRetry -= 1
+                x = traceback.format_exc()
+                print(x)
+                print('>>連線出錯！問題如上...')
+                if tempRetry > 0:
+                    print('>>重新再嘗試一次...')
+                else:
+                    raise ConnectionError(f'目前無法連線「{url}」，或連線出錯！')
         
         if len(matchList) > 0:
             url_driver = matchList[0]
-            retry = MaxRetry + 0
+            tempRetry = retry + 0
             count = 0
-            while retry > 0:
+            while tempRetry > 0:
                 count += 1
                 print(f'找到driver下載連結如下：\n{url_driver}')
                 print('>>開始嘗試下載chromedriver', end='')
@@ -187,7 +211,7 @@ def updateWebdriver(
                     x = traceback.format_exc()
                     print(x)
                     time.sleep(1)
-                    retry -= 1
+                    tempRetry -= 1
             if r.status_code == 200:
                 pass
             else:
@@ -198,7 +222,7 @@ def updateWebdriver(
                     while retry > 0:
                         count += 1
                         print(f'找到driver下載連結如下：\n{url_driver}')
-                        print('>>開始嘗試下載chromedriver', end='')
+                        print('>>開始嘗試下載ChromeDriver', end='')
                         try:
                             r = s.get(url_driver, verify=False, timeout=180)
                             break
@@ -213,12 +237,12 @@ def updateWebdriver(
         else:
             for i in range(len(closeList)-1, -1, -1):
                 url_driver = closeList[i]
-                retry = MaxRetry + 0
+                tempRetry = retry + 0
                 count = 0
-                while retry > 0:
+                while tempRetry > 0:
                     count += 1
                     print(f'找到driver下載連結如下：\n{url_driver}')
-                    print('>>開始嘗試下載chromedriver', end='')
+                    print('>>開始嘗試下載ChromeDriver', end='')
                     try:
                         r = s.get(url_driver, verify=False, timeout=180)
                         break
@@ -227,7 +251,7 @@ def updateWebdriver(
                         x = traceback.format_exc()
                         print(x)
                         time.sleep(1)
-                        retry -= 1
+                        tempRetry -= 1
                 if r.status_code == 200:
                     break
                 
@@ -246,12 +270,12 @@ def updateWebdriver(
             print('，完成！')
             return True
         else:
-            print('>>發現下載最新版driver失敗！可能找不到適合您電腦的版本')
+            print('>>發現下載最新版ChromeDriver失敗！可能找不到適合您電腦的版本')
             return False
         
     else:
         print('>>發現您電腦沒有安裝Chrome(Google瀏覽器)，要安裝以後，使用對應版本號的chromedriver才能發揮作用喔！')
-        print('>>chrome下載網址：「https://www.google.com/intl/zh-TW/chrome/」')
+        print('>>Chrome下載網址：「https://www.google.com/intl/zh-TW/chrome/」')
         _ = webbrowser.open('https://www.google.com/intl/zh-TW/chrome/')
         return False
     

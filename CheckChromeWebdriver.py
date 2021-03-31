@@ -109,7 +109,8 @@ def updateWebdriver(
         pass
 
     #搜尋chrome版本號
-    print('>>搜尋本機目前Chrome版本號')
+    print('-'*30)
+    print('>>開始檢查當前電腦之Chrome與ChromeDriver...')
     supectFolder = []
     for f in os.listdir(chromeDisk):
         if 'rogram' in f:
@@ -149,10 +150,13 @@ def updateWebdriver(
                 os.remove(driverPath)
             except :
                 pass
+    else:
+        print('>>未發現ChromeDirver！')
+        print('>>請稍待...')
         
     #沒有Chromedriver存在，或者Chromedriver已過期就重新下載、更新
     if find == 1:
-        print(f'>>找到您目前使用的Chrome版本號為：{chromeVer}')
+        #print(f'>>找到您目前使用的Chrome版本號為：{chromeVer}')
         myVerList = chromeVer.split('.')
         #下載符合版本號之driver
         s = HTMLSession()
@@ -161,9 +165,11 @@ def updateWebdriver(
         #先抓版本號最近的
         url = 'https://chromedriver.chromium.org/downloads'
         
+        print('>>查找適應當前版本的ChromeDriver...')
         tempRetry = retry + 0
         while tempRetry > 0:
             try:
+                print('>>連線ChromeDriver官網...')
                 r = s.get(url, timeout=timeout)
                 
                 links = r.html.links
@@ -185,6 +191,7 @@ def updateWebdriver(
                             #生成確實的下載網址再append
                             link_fix = str(link).replace('index.html?path=','') + 'chromedriver_win32.zip'
                             closeList.append(link_fix)
+                break
             except :
                 tempRetry -= 1
                 x = traceback.format_exc()

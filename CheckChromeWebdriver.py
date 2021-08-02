@@ -128,11 +128,14 @@ def updateWebdriver(
                     if 'Chrome' in fff:
                         googleTarget = os.path.join(path, ff)
                         chromeFolder = os.path.join(googleTarget, 'Chrome', 'Application')
-                        for ffff in os.listdir(chromeFolder):
-                            if '.' in ffff:
-                                chromeVer = ffff
-                                find = 1
-                                break
+                        try:
+                            for ffff in os.listdir(chromeFolder):
+                                if '.' in ffff:
+                                    chromeVer = ffff
+                                    find = 1
+                                    break
+                        except :
+                            pass
                             
     print(f'>>您電腦當前Chrome瀏覽器的版本號為：{chromeVer}')
     

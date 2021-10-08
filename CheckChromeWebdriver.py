@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jul 15 18:54:45 2020
-
 @author: Chiakai
 """
 #不要print警告(因為requests都以verify=False連線)
@@ -9,7 +8,8 @@ import sys
 import warnings  
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
-from requests_html import HTMLSession
+from requests import Session
+from bs4 import BeautifulSoup
 from zipfile import ZipFile
 import os, time, traceback, webbrowser
 from selenium import webdriver
@@ -162,7 +162,7 @@ def updateWebdriver(
         #print(f'>>找到您目前使用的Chrome版本號為：{chromeVer}')
         myVerList = chromeVer.split('.')
         #下載符合版本號之driver
-        s = HTMLSession()
+        s = Session()
         s.verify = verify
         
         #先抓版本號最近的
@@ -175,12 +175,15 @@ def updateWebdriver(
                 print('>>連線ChromeDriver官網...')
                 r = s.get(url, timeout=timeout)
                 
-                links = r.html.links
+                soup = BeautifulSoup(r.text, 'html.parser')
+
+                aTags = soup.findAll('a')
                 
                 matchList = []
                 closeList = []
                 
-                for link in links:
+                for at in aTags:
+                    link = at.attrs.get('href', '')
                     if '?path=' in link:
                         count = 0
                         for string in myVerList:

@@ -14,6 +14,7 @@ from zipfile import ZipFile
 import os, time, traceback, webbrowser
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+import PySimpleGUI as sg
     
 
 def checkDriverOutdate(chromedriverPath : str) -> bool:
@@ -111,16 +112,16 @@ def updateWebdriver(
     #搜尋chrome版本號
     print('-'*30)
     print('>>開始檢查當前電腦之Chrome與ChromeDriver...')
-    supectFolder = []
+    suspectFolder = []
     for f in os.listdir(chromeDisk):
         if 'rogram' in f:
-            supectFolder.append(f)
+            suspectFolder.append(f)
     
     googleTarget = ''
     chromeVer = ''
     find = 0
     
-    for f in supectFolder:
+    for f in suspectFolder:
         path = os.path.join(chromeDisk,f)
         for ff in os.listdir(path):
             if 'Google' in ff:

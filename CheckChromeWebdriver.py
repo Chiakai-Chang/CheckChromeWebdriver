@@ -14,8 +14,6 @@ from zipfile import ZipFile
 import os, time, traceback, webbrowser
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-import PySimpleGUI as sg
-    
 
 def checkDriverOutdate(chromedriverPath : str) -> bool:
     #print('>>開始檢查您的chromedriver版本是否過時')

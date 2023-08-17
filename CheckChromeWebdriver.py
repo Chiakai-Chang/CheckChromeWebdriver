@@ -11,10 +11,21 @@ if not sys.warnoptions:
     warnings.simplefilter("ignore")
 from requests import Session
 from zipfile import ZipFile
-import os, time, traceback, webbrowser, platform
+import os, time, traceback, webbrowser, platform, winreg
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service 
 from selenium.webdriver.chrome.options import Options
     
+
+def get_chrome_version_from_registry():
+    try:
+        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Google\Chrome\BLBeacon")
+        version, _ = winreg.QueryValueEx(key, "version")
+        return version
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+
 def get_os_type():
     system = platform.system()
     architecture = platform.architecture()[0]
@@ -45,8 +56,8 @@ def checkDriverOutdate(chromedriverPath : str) -> bool:
     
     try:
         with webdriver.Chrome(
-                executable_path=chromedriverPath,
-                chrome_options=options
+                service = Service(chromedriverPath),
+                chrome_options = options
                 ) as driver:
             driver.quit()
     except:
@@ -129,32 +140,37 @@ def updateWebdriver(
     # 搜尋chrome版本號
     print('-'*30)
     print('>>開始檢查當前電腦之 Chrome 版本...')
-    supectFolder = []
-    for f in os.listdir(chromeDisk):
-        if 'rogram' in f:
-            supectFolder.append(f)
-    
-    googleTarget = ''
     chromeVer = ''
     find = 0
     
-    for f in supectFolder:
-        path = os.path.join(chromeDisk,f)
-        for ff in os.listdir(path):
-            if 'Google' in ff:
-                for fff in os.listdir(os.path.join(path,ff)):
-                    if 'Chrome' in fff:
-                        googleTarget = os.path.join(path, ff)
-                        chromeFolder = os.path.join(googleTarget, 'Chrome', 'Application')
-                        try:
-                            for ffff in os.listdir(chromeFolder):
-                                if '.' in ffff:
-                                    chromeVer = ffff
-                                    find = 1
-                                    break
-                        except :
-                            pass
-
+    try:
+        chromeVer = get_chrome_version_from_registry()
+        find = 1
+    except:
+        supectFolder = []
+        for f in os.listdir(chromeDisk):
+            if 'rogram' in f:
+                supectFolder.append(f)
+        
+        googleTarget = ''
+        
+        for f in supectFolder:
+            path = os.path.join(chromeDisk,f)
+            for ff in os.listdir(path):
+                if 'Google' in ff:
+                    for fff in os.listdir(os.path.join(path,ff)):
+                        if 'Chrome' in fff:
+                            googleTarget = os.path.join(path, ff)
+                            chromeFolder = os.path.join(googleTarget, 'Chrome', 'Application')
+                            try:
+                                for ffff in os.listdir(chromeFolder):
+                                    if '.' in ffff:
+                                        chromeVer = ffff
+                                        find = 1
+                                        break
+                            except :
+                                pass
+                            
     if find == 1:        
         print(f'>>您電腦當前 Chrome 瀏覽器的版本號為: {chromeVer}')
         
@@ -237,23 +253,25 @@ def updateWebdriver(
             else:
                 break
 
-            with open(download_filename, 'wb') as f:
-                f.write(r.content)
+        with open(download_filename, 'wb') as f:
+            f.write(r.content)
             
-            with ZipFile(download_filename, mode='r') as z:
-                if 'chromedriver.exe' in driverPath:
-                    driverPath = os.path.dirname(driverPath )
-                z.extractall(driverPath)
-            
-            if delZip:
-                try:
-                    os.remove(download_filename)
-                except:
-                    x = traceback.format_exc()
-                    print(x)
-            
-            print('，完成！')
-            return True
+        with ZipFile(download_filename, 'r') as zip_ref:
+            for file_name in zip_ref.namelist():
+                if 'chromedriver.exe' in file_name:
+                    # 解壓縮特定檔案到指定資料夾
+                    zip_ref.extract(file_name, driverPath)
+                    break  # 如果找到了，就跳出迴圈
+        
+        if delZip:
+            try:
+                os.remove(download_filename)
+            except:
+                x = traceback.format_exc()
+                print(x)
+        
+        print('，完成！')
+        return True
         
     else:
         print('>>發現您電腦沒有安裝 Chrome(Google瀏覽器)，要安裝以後，使用對應版本號的 ChromeDriver 才能發揮作用喔！')

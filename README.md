@@ -1,4 +1,7 @@
-# CheckChromeWebdriver
+# (廢棄) CheckChromeWebdriver
+* 有更好用的: [webdriver-manager](https://pypi.org/project/webdriver-manager/)
+* 'pip install webdriver-manager'
+
 * 小函數，自動確認當前電腦的Selenium ChromeDriver 是否存在、是否過期，若不存在或過期，就自動更新！
 * 包含checkDriverOutdate、updateWebdriver兩個函數
 
